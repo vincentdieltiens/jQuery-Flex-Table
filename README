@@ -1,0 +1,16 @@
+This is a jQuery plugin that makes html tables more flexibles.
+
+* You can truncate cell content if this one is too large for the column width. 
+For this, use the option ellipsisClass and add the used class to cells that you want
+to be truncated...
+
+$('#table').flextable({
+	ellipsisClass: 'truncateme'
+});
+
+<table>
+	<tr>
+		<td class="truncateme">long text</td>
+		<td></td>
+	</tr>
+</table>
