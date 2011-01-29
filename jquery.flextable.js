@@ -53,6 +53,10 @@
 			if( options.ellipsisClass != null ) {
 				flexTable.ellipsis_cell_content();
 			}
+			
+			$(window).resize(function(){
+				flexTable.update_column_widths();
+			})
         });
 	}
 	
@@ -116,20 +120,59 @@
 			var col_index = 0;
 
 			var self = this;
-
-			this.$table.find('colgroup').find('col').each(function(){
+			
+			var w = ''
+			this.$table.find('thead').find('th').each(function(){
 
 				var column_width = self.column_widths[col_index];
 				var $col = $(this);
-
+				
 				if( column_width.type == 'percentage' ) {
-					$col.width( relative_width * column_width.val/100 );
+					$col.css('width', relative_width * column_width.val/100 );
+					w += (relative_width * column_width.val/100)+'px ';
 				} else {
-					$col.width( column_width.val );
+					$col.css('width', column_width.val );
+					w += column_width.val+'px ';
 				}
-
+				
 				col_index += 1;
 			});
+			
+			
+			this.$table.find('tbody').find('tr').each(function(){
+				
+				col_index = 0;
+				$(this).find('td').each(function(){
+
+					var column_width = self.column_widths[col_index];
+					var $td = $(this);
+
+					if( column_width.type == 'percentage' ) {
+						$td.css('width', relative_width * column_width.val/100 );
+						//w += (relative_width * column_width.val/100)+'px ';
+					} else {
+						$td.css('width', column_width.val );
+						//w += column_width.val+'px ';
+					}
+
+					if( $td.hasClass(self.options.resizeableClass) ) {
+						$(this).find('div').css('width', $td.width()+'px');
+					}
+
+					col_index += 1;
+				});
+			});
+			$('h1').html(w);
+			
+			
+			/*if( this.options.resizeableClass != null ) {
+				this.$table.find('tbody').find('td.'+this.options.resizeableClass+' div').each(function(){
+					var cell_width = $(this).parent('td').width();
+					this.csss('width', cell_width+'px');
+				});
+			}*/
+			
+			
 		},
 		
 		/**
@@ -151,7 +194,7 @@
 				col_count++;
 			});
 
-			$colgroup.find('col').width( this.$table.width()/col_count );
+			//$colgroup.find('col').width( this.$table.width()/col_count );
 
 			this.$table.prepend($colgroup);
 		},
