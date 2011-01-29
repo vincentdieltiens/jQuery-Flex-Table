@@ -12,6 +12,8 @@
 (function($){
 	/**
 	 * Create a flex table for each element
+	 *
+	 * Note : for readability, all HTML objet variable begin with '$'
 	 * @param opts : the options defined by the user
 	 * @param lazy : only load needed
 	 */
@@ -37,6 +39,8 @@
 			
 			var $table = $(this);
 			
+			init_colgroup($table, options);
+			
 			if( options.resizableClass != null ) {
 				set_header_resizeable($table, options);
 			}
@@ -45,6 +49,29 @@
 				ellipsis_cell_content($table, options);
 			}
         });
+	}
+	
+	/**
+	 * Initialize the colgroup if it's not defined in the HTML
+	 */
+	function init_colgroup($table, options) {
+		if( $table.find('colgroup').size > 0 ) {
+			alert('found !');
+			return;
+		}
+
+		$colgroup = $('<colgroup />');
+		
+		var col_count = 0;
+		$table.find('thead').find('th').each(function() {
+			$col = $('<col />');
+			$colgroup.append($col);
+			col_count++;
+		});
+		
+		$colgroup.find('col').width( $table.width()/col_count );
+
+		$table.prepend($colgroup);
 	}
 	
 	function ellipsis_cell_content($table, options) {
@@ -63,7 +90,7 @@
 			// Create the wrapper <div>
 			// Important : we need to set explicitly the width of the wrapper div
 			// 	to make the text-overflow: ellipsis working !	
-			var wrapper_div = $('<div />').html(cell_content).width(cell_width)
+			var $wrapper_div = $('<div />').html(cell_content).width(cell_width)
 				.css({
 					'white-space': 'nowrap',
 					'overflow': 'hidden',
@@ -76,7 +103,7 @@
 				});
 			
 			// update the content of the <td> cell
-			$td.html(wrapper_div);
+			$td.html($wrapper_div);
 			
 			// put a title for the <td> cell
 			$td.attr('title', cell_content);
