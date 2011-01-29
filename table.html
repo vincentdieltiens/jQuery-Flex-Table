@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>jquery.flextable.js</title>
+		<link type="text/css" rel="stylesheet" href="table.css" />
+		<script type="text/javascript" src="../../jquery-1.4.4.min.js"></script>
+		<script type="text/javascript" src="jquery.flextable.js"></script>
+		<script type="text/javascript">
+		$(document).ready(function(){
+			
+			$(document)
+			
+			$('#table1').flextable({
+				resizeableClass: 'resizeable'
+			});
+		});
+		</script>
+	</head>
+	<body>
+		
+		<table id="table1" style="display: table;">
+			<thead>
+			<tr>
+				<th style="width: 200px;">Col 1</th>
+				<th style="width: 100px;" class="resizeable">Col 2</th>
+				<th style="width: 200px;">Col 3</th>
+				<th style="width: 200px;">Col 4</th>
+				<th style="width: 100px;">Col 5</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td>Content line 1</td>
+				<td>Content line 2</td>
+				<td>Content line 3</td>
+				<td>Content line 4</td>
+				<td>Content line 5</td>
+			</tr>
+			<tr>
+				<td>Content line 1</td>
+				<td>Content line 2</td>
+				<td>Content line 3</td>
+				<td>Content line 4</td>
+				<td>Content line 5</td>
+			</tr>
+			<tr>
+				<td>Content line 1</td>
+				<td>Content line 2</td>
+				<td>Content line 3</td>
+				<td>Content line 4</td>
+				<td>Content line 5</td>
+			</tr>
+			<tr>
+				<td>Content line 1</td>
+				<td>Content line 2</td>
+				<td>Content line 3</td>
+				<td>Content line 4</td>
+				<td>Content line 5</td>
+			</tr>
+			</tbody>
+		</table>
+		
+	</body>
+</html>
