@@ -10,10 +10,6 @@
  * @example Visit http://www.vincentdieltiens.be/projects/jquery/flextable/ for more informations about this jQuery plugin
  */
 (function($){
-	var column_widths = [];
-	var pixel_column_total_width = 0;
-	var number_of_pixel_columns = 0;
-	
 	/**
 	 * Create a flex table for each element
 	 *
@@ -43,158 +39,170 @@
 			
 			var $table = $(this);
 			
-			init_colgroup($table, options);
+			var flexTable = new FlexTable($table, options);
 			
 			if( options.columnWidths != null ) {
-				init_column_widths($table, options);
-				update_column_widths($table, options);
+				flexTable.init_column_widths();
+				flexTable.update_column_widths();
 			} 
 			
 			if( options.resizableClass != null ) {
-				set_header_resizeable($table, options);
+				flexTable.set_header_resizeable();
 			}
 			
 			if( options.ellipsisClass != null ) {
-				ellipsis_cell_content($table, options);
+				flexTable.ellipsis_cell_content();
 			}
         });
 	}
 	
-	function init_column_widths($table, options) {
-		for(var col_index in options.columnWidths) {
-			
-			var column_width = ""+options.columnWidths[col_index];
-			
-			if( /^[0-9]+%$/.test(column_width) ) {
-				// Width is a percentage
-				var percentage = parseInt(column_width.substring(0, column_width.length -1));
-				column_widths[col_index] = {'type':'percentage', 'val':percentage};
-				
-			}
-			else if( /^[0-9]+px$/.test(column_width) ) {
-				// Width is in pixels
-				var pixels = parseInt(column_width.substring(0, column_width.length -2));
-				column_widths[col_index] = {'type':'pixels', 'val': pixels};
-				
-				pixel_column_total_width += pixels;
-				number_of_pixel_columns += 1;
-			} 
-			else if( /^[0-9]+$/.test(column_width) ) {
-				// Width is in pixels
-				var pixels = parseInt(column_width);
-				column_widths[col_index] = {'type':'pixels', 'val': pixels};
-				
-				pixel_column_total_width += pixels;
-				number_of_pixel_columns += 1;
-			}
-			else {
-				alert('size at index '+col_index+' in option columnWidths not understood');
-			}
-		}
-	}
-	
-	function update_column_widths($table, options) {
-		
-		var table_width = $table.width();
-		var relative_width = table_width - pixel_column_total_width;
-		
-		var fixed_column_widths = 0;
-		var relative_columns = {};
-		var relative_columns_number = 0;
-		
-		var col_index = 0;
-		
-		$table.find('colgroup').find('col').each(function(){
-			
-			var column_width = column_widths[col_index];
-			var $col = $(this);
-			
-			if( column_width.type == 'percentage' ) {
-				$col.width( relative_width * column_width.val/100 );
-			} else {
-				$col.width( column_width.val );
-			}
-			
-			col_index += 1;
-		});
-		
-		
-	} 
 	
 	/**
-	 * Initialize the colgroup if it's not defined in the HTML
+	 * Constructor class FlexTable
+	 * 
 	 * @param $table the table html object
 	 * @param options the options
 	 */
-	function init_colgroup($table, options) {
-		if( $table.find('colgroup').size > 0 ) {
-			alert('found !');
-			return;
-		}
-
-		$colgroup = $('<colgroup />');
+	function FlexTable($table, options) {
+		this.options = options;
+		this.$table = $table;
 		
-		var col_count = 0;
-		$table.find('thead').find('th').each(function() {
-			$col = $('<col />');
-			$colgroup.append($col);
-			col_count++;
-		});
+		this.column_widths = [];
+		this.pixel_column_total_width = 0;
+		this.number_of_pixel_columns = 0;
 		
-		$colgroup.find('col').width( $table.width()/col_count );
-
-		$table.prepend($colgroup);
+		this.init_colgroup();
 	}
 	
-	/**
-	 * 
-	 */
-	function ellipsis_cell_content($table, options) {
-		// For each td with the elipisis class, we wrap its content with
-		// a <div> which truncate the content if needed
-		$table.find('tbody').find('td.'+options.ellipsisClass).each(function() {
-			
-			var $td = $(this);
-			
-			// Get the cell of the <td> cell
-			var cell_width = $td.width();
-			
-			// Get the content of the <td> cell before wrapping
-			var cell_content = $td.html();
-			
-			// Create the wrapper <div>
-			// Important : we need to set explicitly the width of the wrapper div
-			// 	to make the text-overflow: ellipsis working !	
-			var $wrapper_div = $('<div />').html(cell_content).width(cell_width)
-				.css({
-					'white-space': 'nowrap',
-					'overflow': 'hidden',
-					'text-overflow': 'ellipsis',
-					'-o-text-overflow': 'ellipsis',
-					'-icab-text-overflow': 'ellipsis',
-					'-khtml-text-overflow': 'ellipsis',
-					'-moz-text-overflow': 'ellipsis',
-					'-webkit-text-overflow': 'ellipsis'
-				});
-			
-			// update the content of the <td> cell
-			$td.html($wrapper_div);
-			
-			// put a title for the <td> cell
-			$td.attr('title', cell_content);
-		});
-	}
-   
-	/**
-	 * Set header as resizeable. In other words, each columns
-	 * with the class stored in "options.resizeableClass" can be resized
-	 */
-	function set_header_resizeable($table, options) {
-		// We add a <span> for each header to permit it to be resizable
-		$table.find('thead').find('th.'+options.resizeableClass).each(function() {
-			$(this).prepend('<span class="ui-resize"></span>');
-		});
-	}
+	FlexTable.prototype = {
+		
+		init_column_widths: function() {
+			for(var col_index in this.options.columnWidths) {
+
+				var column_width = ""+this.options.columnWidths[col_index];
+
+				if( /^[0-9]+%$/.test(column_width) ) {
+					// Width is a percentage
+					var percentage = parseInt(column_width.substring(0, column_width.length -1));
+					this.column_widths[col_index] = {'type':'percentage', 'val':percentage};
+
+				}
+				else if( /^[0-9]+px$/.test(column_width) ) {
+					// Width is in pixels
+					var pixels = parseInt(column_width.substring(0, column_width.length -2));
+					this.column_widths[col_index] = {'type':'pixels', 'val': pixels};
+
+					this.pixel_column_total_width += pixels;
+					this.number_of_pixel_columns += 1;
+				} 
+				else if( /^[0-9]+$/.test(column_width) ) {
+					// Width is in pixels
+					var pixels = parseInt(column_width);
+					this.column_widths[col_index] = {'type':'pixels', 'val': pixels};
+
+					this.pixel_column_total_width += pixels;
+					this.number_of_pixel_columns += 1;
+				}
+				else {
+					alert('size at index '+col_index+' in option columnWidths not understood');
+				}
+			}
+		},
+		
+		update_column_widths: function() {
+			var table_width = this.$table.width();
+			var relative_width = table_width - this.pixel_column_total_width;
+
+			var col_index = 0;
+
+			var self = this;
+
+			this.$table.find('colgroup').find('col').each(function(){
+
+				var column_width = self.column_widths[col_index];
+				var $col = $(this);
+
+				if( column_width.type == 'percentage' ) {
+					$col.width( relative_width * column_width.val/100 );
+				} else {
+					$col.width( column_width.val );
+				}
+
+				col_index += 1;
+			});
+		},
+		
+		/**
+		 * Initialize the colgroup if it's not defined in the HTML
+		 * @param $table the table html object
+		 * @param options the options
+		 */
+		init_colgroup: function() {
+			if( this.$table.find('colgroup').size > 0 ) {
+				return;
+			}
+
+			$colgroup = $('<colgroup />');
+
+			var col_count = 0;
+			this.$table.find('thead').find('th').each(function() {
+				$col = $('<col />');
+				$colgroup.append($col);
+				col_count++;
+			});
+
+			$colgroup.find('col').width( this.$table.width()/col_count );
+
+			this.$table.prepend($colgroup);
+		},
+		
+		ellipsis_cell_content: function() {
+			// For each td with the elipisis class, we wrap its content with
+			// a <div> which truncate the content if needed
+			this.$table.find('tbody').find('td.'+this.options.ellipsisClass).each(function() {
+
+				var $td = $(this);
+
+				// Get the cell of the <td> cell
+				var cell_width = $td.width();
+
+				// Get the content of the <td> cell before wrapping
+				var cell_content = $td.html();
+
+				// Create the wrapper <div>
+				// Important : we need to set explicitly the width of the wrapper div
+				// 	to make the text-overflow: ellipsis working !	
+				var $wrapper_div = $('<div />').html(cell_content).width(cell_width)
+					.css({
+						'white-space': 'nowrap',
+						'overflow': 'hidden',
+						'text-overflow': 'ellipsis',
+						'-o-text-overflow': 'ellipsis',
+						'-icab-text-overflow': 'ellipsis',
+						'-khtml-text-overflow': 'ellipsis',
+						'-moz-text-overflow': 'ellipsis',
+						'-webkit-text-overflow': 'ellipsis'
+					});
+
+				// update the content of the <td> cell
+				$td.html($wrapper_div);
+
+				// put a title for the <td> cell
+				$td.attr('title', cell_content);
+			});
+		},
+		
+		/**
+		 * Set header as resizeable. In other words, each columns
+		 * with the class stored in "options.resizeableClass" can be resized
+		 */
+		set_header_resizeable: function() {
+			// We add a <span> for each header to permit it to be resizable
+			this.$table.find('thead').find('th.'+this.options.resizeableClass).each(function() {
+				$(this).prepend('<span class="ui-resize"></span>');
+			});	
+		}
+	};
 	
 	// Default options for this plugin
 	$.fn.flextable.defaults = {
