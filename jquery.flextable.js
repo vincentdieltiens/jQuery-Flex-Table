@@ -84,6 +84,7 @@
 		this.column_widths = [];
 		this.width_for_all_fixed_columns = 0;
 		this.fixed_columns_count = 0;
+		this.ellipsis_columns = {};
 
 		//this.init_colgroup();
 	}
@@ -210,45 +211,73 @@
 		 * This sub <div> is necessary because text-overflow doesn't work with <td> !
 		 */
 		ellipsis_cell_content: function() {
-			// For each td with the elipisis class, we wrap its content with
-			// a <div> which truncate the content if needed
-			this.$table.find('tbody').find('td.'+this.options.ellipsisClass).each(function() {
-				var $td = $(this);
-
-				// Get the cell of the <td> cell
-				var cell_width = $td.width();
-
-				// Get the content of the <td> cell before wrapping
-				var cell_content = $td.html();
-
-				// Create the wrapper <div>
-				// Important : we need to set explicitly the width of the wrapper div
-				// 	to make the text-overflow: ellipsis working !	
+			// For each header cell with the options.ellipsisClass, 
+			// We store the information 
+			var self = this;
+			
+			self.ellipsis_columns = {};
+			var col_index = 0;
+			this.$table.find('thead').find('th').each(function(){
+				if( $(this).hasClass(self.options.ellipsisClass) ) {
+					self.ellipsis_columns[col_index] = true;
+				}
+				col_index += 1;
+			});
+			
+			
+			
+			this.$table.find('tbody').find('tr').each(function(){
+				var $tr = $(this);
 				
-				var $wrapper_div = $('<div />').html(cell_content).width(cell_width)
-					.css({
-						'white-space': 'nowrap',
-						'overflow': 'hidden',
-						'text-overflow': 'ellipsis',
-						'-o-text-overflow': 'ellipsis',
-						'-icab-text-overflow': 'ellipsis',
-						'-khtml-text-overflow': 'ellipsis',
-						'-moz-text-overflow': 'ellipsis',
-						'-webkit-text-overflow': 'ellipsis'
+				var col_index = 0;
+				$tr.find('td').each(function() {
+					var $td = $(this);
+					
+					// If the column of this cell is not ellipsis, skip
+					if( !(col_index in self.ellipsis_columns) ) {
+						col_index += 1;
+						return;
+					}
+					
+					// Get the cell of the <td> cell
+					var cell_width = $td.width();
+
+					// Get the content of the <td> cell before wrapping
+					var cell_content = $td.html();
+
+					// Create the wrapper <div>
+					// Important : we need to set explicitly the width of the wrapper div
+					// 	to make the text-overflow: ellipsis working !	
+					var $wrapper_div = $('<div />').html(cell_content).width(cell_width)
+						.css({
+							'white-space': 'nowrap',
+							'overflow': 'hidden',
+							'text-overflow': 'ellipsis',
+							'-o-text-overflow': 'ellipsis',
+							'-icab-text-overflow': 'ellipsis',
+							'-khtml-text-overflow': 'ellipsis',
+							'-moz-text-overflow': 'ellipsis',
+							'-webkit-text-overflow': 'ellipsis',
+							'background-color': '#880000'
+						});
+
+					// update the content of the <td> cell
+					$td.html($wrapper_div);
+
+					// put a title for the <td> cell
+					$td.attr('title', cell_content);
+					
+					//alert('bind resize');
+					$td.bind('resize', function(e, new_width){
+						
+						$(this).find('div').width(new_width-2);
+						$(this).width(new_width-2);
 					});
-
-				// update the content of the <td> cell
-				$td.html($wrapper_div);
-
-				// put a title for the <td> cell
-				$td.attr('title', cell_content);
-				
-				//alert('bind resize');
-				$td.bind('resize', function(e, new_width){
-					$(this).find('div').width(new);
-					$(this).width(new_width);
+					
+					col_index += 1;
 				});
 			});
+			
 		},
 		
 		/**
@@ -385,6 +414,8 @@
 				return;
 			}
 			
+			var $next_th = null;
+			
 			var diff = 0;
 			if( self.options.changeTableWidthOnColResize == true ) {
 				// set the new size of the table
@@ -398,10 +429,6 @@
 				
 				$next_th = $th.next();
 				
-				var new_sash_pos = $next_th.position().left - 2;
-				$sash.css({'left': new_sash_pos+'px'});
-				
-				
 			} else {
 				
 				// Tries to set the new width
@@ -409,68 +436,48 @@
 				
 				// Gets the difference between the width wanted by the user and the real one
 				diff = $th.width() - th_width;
-
+				
 				// Get the next column and resize it !
 				$next_th = $th.next();
 				$next_th.width( $next_th.width() - diff );
-				
-				var new_sash_pos = $next_th.position().left - 2;
-				$sash.css({'left': new_sash_pos+'px'});
 			}
+			
+			// We must resize all the subdivs used for ellipsis...
 			
 			if( drag_distance != 0 ) {
+				// Get each line of the table
+				var new_widths = {};
+				
 				self.$table.find('tbody').find('tr').each(function(){
 					var $tr = $(this);
-					var index = 0;
+					
+					// the current column index
+					var col_index = 0;
+					
+					
+					// For each column, if it's a 
 					$tr.find('td').each(function() {
-						//$td.width(50);
-						
-						if( index == th_index ) {
+						if( col_index == th_index ) {
 							var $td = $(this);
 							
-							/*if( $td.hasClass(self.options.ellipsisClass) ) {
-								$td.find('div').width( 50 );
-								$td.width(50);
-							}*/
-							var new_width = $td.width() + drag_distance;
-							$td.trigger('resize', [new_width]);
+							// define new_width once
+							if( !(col_index in new_widths) ) {
+								//alert('define new width : '+new_width);
+								//alert($td.width());
+								new_widths[col_index] = $td.width();
+							}
+							//alert(diff);
+							// trigger the resize of the cell
+							$td.trigger('resize', [new_widths[col_index]]);
 						}
-						index += 1;
+						col_index += 1;
 					});
 				});
 			}
 			
-			/*if( self.options.ellipsisClass != null ) {
-				if( $td.hasClass(self.options.ellipsisClass) ) {
-					alert('lol');
-					$td.find('div').width($td.width());
-				}
-			}*/
-			
-			
-			
-			// If there is a difference
-			/*if( diff != 0 ) {
-				this.$table.find('thead').find('tr').each(function(){
-
-					$tr = $(this);
-
-					var index = 0;
-					var flex_col_number = 0;
-					$tr.find('th').each(function() {
-
-						var column_width = self.column_widths[index];
-
-						if( column_width.type == 'flexible' ) {
-							$(this).width(column_width.val/100 * diff);
-						}
-						
-						flex_col_number += 1;
-						
-						index += 1;
-					});
-				});
-			}*/
+			//alert($th.position().left);
+			var new_sash_pos = $th.next().position().left - 2;
+			$sash.css({'left': new_sash_pos+'px'});
 		} 
 	};
 	
