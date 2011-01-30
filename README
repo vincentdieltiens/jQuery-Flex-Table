@@ -1,4 +1,13 @@
 This jQuery plugin in currently in development.
 
-Send me an email on http://www.vincentdieltiens.be/en/contact if you want to know when the first
-version is released or if you want to participate to the development.
+Send me an email on http://www.vincentdieltiens.be/en/contact if you want to 
+know when the first version is released or if you want to participate to the 
+development.
+
+------------------------------------------------------------------------------
+
+This plugin makes HTML tables more flexible :
+	- Some columns can be resized (without changing the table width)
+	- The content of some cell can be truncated if it's too long for
+	  the cell width.
+	- 

@@ -18,8 +18,16 @@ table span.ui-resize {
 	margin			: -3px -5px -5px 0;
 	width			: 8px;
 	z-index			: 10000;
+	background-image: url(images/drag.png);
 }
+
 table tr td, table tr th {
 	overflow: hidden;
 	white-space: nowrap;
+}
+
+.ghost {
+	background-color: #00ff00;
+	width: 2px;
+	background-image: url(images/separator.gif);
 }
