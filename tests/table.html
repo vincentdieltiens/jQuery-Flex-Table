@@ -18,6 +18,12 @@
 				resizeableClass: 'resizeable',
 				ghostClass: 'ghost'
 			});
+			
+			$('#table3').flextable({
+				resizeableClass: 'resizeable',
+				resizeTableWidthOnColResize: true,
+				ghostClass: 'ghost'
+			});
 		});
 		</script>
 	</head>
@@ -97,6 +103,64 @@
 		</pre></code>
 		
 		<table id="table2" style="display: table;">
+			<thead>
+			<tr>
+				<th id="col11" style="width: 60px;">Col 1</th>
+				<th id="col12" style="width: 50px;" class="truncate resizeable">Col 2</th>
+				<th id="col13" style="width: 200px;">Col 3</th>
+				<th id="col14" style="width: 200px;">Col 4</th>
+				<th id="col15" style="width: 100px;">Col 5</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td>Content line 1</td>
+				<td>Content line 2</td>
+				<td>Content line 3</td>
+				<td>Content line 4</td>
+				<td>Content line 5</td>
+			</tr>
+			<tr>
+				<td>Content line 1</td>
+				<td>Content line 2</td>
+				<td>Content line 3</td>
+				<td>Content line 4</td>
+				<td>Content line 5</td>
+			</tr>
+			<tr>
+				<td>Content line 1</td>
+				<td>Content line 2</td>
+				<td>Content line 3</td>
+				<td>Content line 4</td>
+				<td>Content line 5</td>
+			</tr>
+			<tr>
+				<td>Content line 1</td>
+				<td>Content line 2</td>
+				<td>Content line 3</td>
+				<td>Content line 4</td>
+				<td>Content line 5</td>
+			</tr>
+			</tbody>
+		</table>
+		
+		<h1>With table resizing</h1>
+		
+		<ul>
+			<li>Table is not fixed and depend on the column sizes</li>
+			<li>Column content can be truncated</li>
+			<li>Column widths are fixed</li>
+		</ul>
+		
+		<code><pre>
+			$('#table2').flextable({
+				resizeableClass: 'resizeable',
+				ellipsisClass: 'truncate',
+				ghostClass: 'ghost'
+			});
+		</pre></code>
+		
+		<table id="table3" style="display: table;">
 			<thead>
 			<tr>
 				<th id="col11" style="width: 60px;">Col 1</th>

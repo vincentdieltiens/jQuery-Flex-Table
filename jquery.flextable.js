@@ -258,7 +258,7 @@
 							'-khtml-text-overflow': 'ellipsis',
 							'-moz-text-overflow': 'ellipsis',
 							'-webkit-text-overflow': 'ellipsis',
-							'background-color': '#880000'
+							//'background-color': '#880000'
 						});
 
 					// update the content of the <td> cell
@@ -385,10 +385,10 @@
 		 * Stop the move of the ghost and hide it.
 		 * Also, update the column sizes
 		 * @param $sash the sash that is dragged 
-		 * @param th_index the index of the column that is resized
+		 * @param col_index the index of the column that is resized
 		 * @param e the event object
 		 */
-		ghost_drag_stop: function($th, $sash, th_index, e) {
+		ghost_drag_stop: function($th, $sash, col_index, e) {
 			var self = this;
 			
 			$sash.removeClass('ghost_move');
@@ -399,85 +399,54 @@
 			.unbind('mousedown.disableTextSelect');
 			
 			// Hide Stop the drag of the ghost
-			this.dragging = false;
+			self.dragging = false;
 			
-			// Width of the th
-			var th_width = $th.width();
+			var drag_distance = e.clientX - self.drag_x;
 			
-			//
-			
-			// Gets the distance of the drag
-			var drag_distance = e.clientX - this.drag_x;
-			
-			// Do nothing if there is no drag
-			if( drag_distance == 0 ) {
-				return;
+			if( self.options.resizeTableWidthOnColResize == true ) {
+				self.$table.width( self.$table.width() + drag_distance );
+			}
+			self.resize_column($th, col_index, drag_distance);
+			if( self.options.resizeTableWidthOnColResize == false ) {
+				self.resize_column($th.next(), col_index+1, -drag_distance);
 			}
 			
-			var $next_th = null;
 			
-			var diff = 0;
-			if( self.options.changeTableWidthOnColResize == true ) {
-				// set the new size of the table
-				self.$table.width( self.$table.width() + e.clientX - this.drag_x );
-				
-				// set the new Width
-				$th.width(th_width + drag_distance);
-				
-				// Gets the difference between the width wanted by the user and the real one
-				diff = $th.width() - th_width;
-				
-				$next_th = $th.next();
-				
-			} else {
-				
-				// Tries to set the new width
-				$th.width(th_width + drag_distance);
-				
-				// Gets the difference between the width wanted by the user and the real one
-				diff = $th.width() - th_width;
-				
-				// Get the next column and resize it !
-				$next_th = $th.next();
-				$next_th.width( $next_th.width() - diff );
-			}
+			var sash_new_pos = $th.next().position().left - 2;
+			$sash.css('left', sash_new_pos+'px');
+		},
+		
+		resize_column: function($cell, col_index, size) {
+			var self = this;
 			
-			// We must resize all the subdivs used for ellipsis...
-			
-			if( drag_distance != 0 ) {
-				// Get each line of the table
-				var new_widths = {};
+			if( col_index in self.ellipsis_columns ) {
+				// The current column is an ellipsis column
+				// We must resize the subdivs of the column before resizing it
 				
 				self.$table.find('tbody').find('tr').each(function(){
 					var $tr = $(this);
 					
-					// the current column index
-					var col_index = 0;
-					
-					
-					// For each column, if it's a 
+					var td_index = 0;
 					$tr.find('td').each(function() {
-						if( col_index == th_index ) {
-							var $td = $(this);
-							
-							// define new_width once
-							if( !(col_index in new_widths) ) {
-								//alert('define new width : '+new_width);
-								//alert($td.width());
-								new_widths[col_index] = $td.width();
-							}
-							//alert(diff);
-							// trigger the resize of the cell
-							$td.trigger('resize', [new_widths[col_index]]);
+						var $td = $(this);
+						
+						if( td_index == col_index ) {
+							var $div = $td.find('div');
+							$div.width($div.width() + size);
+							//alert('updated');
 						}
-						col_index += 1;
+
+						td_index += 1;
 					});
-				});
+				})
+				
+			} else {
+				// The current column is not an allipsis column
+				// update the size of the column
+				
+				$cell.width( $cell.width() + size );
+				
 			}
-			
-			//alert($th.position().left);
-			var new_sash_pos = $th.next().position().left - 2;
-			$sash.css({'left': new_sash_pos+'px'});
 		} 
 	};
 	
@@ -487,7 +456,7 @@
 		resizeableClass: 'resizeable',
 		columnWidths: null,
 		ghostClass: null,
-		changeTableWidthOnColResize: false
+		resizeTableWidthOnColResize: false
 	};
 	
 	$.fn.flextable.lazyDefaults = {
@@ -495,6 +464,6 @@
 		resizeableClass: null,
 		columnWidths: null,
 		ghostClass: null,
-		changeTableWidthOnColResize: false
+		resizeTableWidthOnColResize: false
 	}
 })(jQuery);
