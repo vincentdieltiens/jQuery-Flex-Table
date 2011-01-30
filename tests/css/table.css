@@ -28,5 +28,9 @@ table tr td, table tr th {
 
 .ghost {
 	width: 2px;
+	/*background-image: url(../images/separator.gif);*/
+}
+
+.ghost_move {
 	background-image: url(../images/separator.gif);
 }

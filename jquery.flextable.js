@@ -76,9 +76,6 @@
 		// HTML table object
 		this.$table = $table;
 		
-		// The ghost vertial line for resizing
-		this.$ghost = null;
-		
 		// information about dragging resizing col
 		this.dragging = false;
 		this.drag_x = 0;
@@ -284,92 +281,83 @@
 		set_header_resizeable: function() {
 			var self = this;
 			
-			// Create a ghost vertical line to display when resizing the column
-			this.$ghost = $('<div />');
-			
-			if( this.options.ghostClass != null ) {
-				//alert(this.options.ghostClass);
-				this.$ghost
-					.addClass(this.options.ghostClass)
-					.css({
-						'position': 'absolute',
-						'height': this.$table.height()+'px',
-						'cursor': 'col-resize',
-					});
-			} else {
-				this.$ghost.css({
-					'width': '5px',
-					'position': 'absolute',
-					'background-color': '#880000',
-					'cursor': 'col-resize',
-					'height': this.$table.height()+'px',
-				});
-			}
-			this.$ghost.hide();
-			
-			self.$table.before(this.$ghost);
+			var $sashes = $('<div />').addClass('sashes');
 			
 			// For each header cell, if it's resizeable add a <span> for the drag
 			var th_index = 0;
 			this.$table.find('thead').find('th').each(function() {
-				$th = $(this).css({
-					'MozUserSelect' : 'none'
-				}).bind('selectstart.disableTextSelect', function() {
-					return false;
-				}).bind('mousedown.disableTextSelect', function() {
-					return false;
-				});
+				var $th = $(this);
 				
 				if( !$th.hasClass(self.options.resizeableClass) ) {
 					th_index += 1;
 					return;
 				}
 				
-				// create new span
-				$span = $('<span/>').addClass('ui-resize');
+				var sash_pos = $th.position().left + $th.width();
 				
-				// append to the header cell
-				$th.append($span);
+				var $sash = $('<div />').addClass('ghost').css({
+					'position': 'absolute',
+					'height': self.$table.height(),
+					'left': sash_pos+'px',
+					'cursor': 'col-resize'
+				})
+				
+				$sashes.append($sash);
 				
 				// and add some action on span
-				$span.mousedown(function(e){
+				$sash.mousedown(function(e){
 					var th_index_copy = th_index;
-					self.ghost_drag_start($(this), th_index_copy, e);
+					self.ghost_drag_start($th, $(this), th_index_copy, e);
 				});
 
 				self.$table.mousemove(function(e){
 					if( self.dragging == true ) {
 						var th_index_copy = th_index;
-						self.ghost_drag_move($span, th_index_copy, e);
+						self.ghost_drag_move($sash, th_index_copy, e);
 					}
 				});
 
-				self.$ghost.mouseup(function(e){
+				$sash.mouseup(function(e){
 					if( self.dragging ) {
 						var th_index_copy = th_index;
-						self.ghost_drag_stop($span, th_index_copy, e);
+						
+						var $th_copy = $th;
+						self.ghost_drag_stop($th_copy, $sash, th_index_copy, e);
 					}
 
 				});
 				
 				th_index += 1;
 			});
+			
+			self.$table.before($sashes);
 		},
 		
 		/**
 		 * Starts the drag of the ghost
+		 * @param $th the cell that is resized
 		 * @param $span the span that is dragged 
 		 * @param th_index the index of the column that is resized
 		 * @param e the event object
 		 */
-		ghost_drag_start: function($span, th_index, e) {
+		ghost_drag_start: function($th, $sash, th_index, e) {
 			// Indicates that a drag is started
 			this.dragging = true;
 			// Store the position of the start drag (to calcule the distance of the drag)
 			this.drag_x = e.clientX;
 			
+			this.$table.css({
+				'MozUserSelect' : 'none'
+			}).bind('selectstart.disableTextSelect', function() {
+				return false;
+			}).bind('mousedown.disableTextSelect', function() {
+				return false;
+			});
+			
+			$sash.addClass('ghost_move');
+			
 			// Moves and show the ghost
-			this.$ghost.css({
+			$sash.css({
 				left: e.clientX+'px',
 			}).show();
 		},
@@ -380,9 +368,9 @@
 		 * @param th_index the index of the column that is resized
 		 * @param e the event object
 		 */
-		ghost_drag_move: function($span, th_index, e) {
+		ghost_drag_move: function($sash, th_index, e) {
 			// Moves the cursor...
-			this.$ghost.css({
+			$sash.css({
 				left: e.clientX+'px',
 			});
 		},
@@ -390,19 +378,22 @@
 		/**
 		 * Stop the move of the ghost and hide it.
 		 * Also, update the column sizes
-		 * @param $span the span that is dragged 
+		 * @param $sash the sash that is dragged 
 		 * @param th_index the index of the column that is resized
 		 * @param e the event object
 		 */
-		ghost_drag_stop: function($span, th_index, e) {
+		ghost_drag_stop: function($th, $sash, th_index, e) {
 			var self = this;
 			
-			// Hide Stop the drag of the ghost
-			this.$ghost.hide();
-			this.dragging = false;
+			$sash.removeClass('ghost_move');
 			
-			// Gets the header cell that we will resize
-			var $th = $span.parent('th');
+			self.$table.css({
+				'MozUserSelect' : ''
+			}).unbind('selectstart.disableTextSelect')
+			.unbind('mousedown.disableTextSelect');
+			
+			// Hide Stop the drag of the ghost
+			this.dragging = false;
 			
 			// Width of the th
 			var th_width = $th.width();
