@@ -10,7 +10,7 @@ table tr th {
 	text-align: left;
 	background-image: url(../images/header_bg.gif);
 	font-weight: normal;
-	border-bottom: 1px solid #ccc;
+	height: 22px;
 }
 
 table span.ui-resize {
@@ -28,10 +28,11 @@ table tr td, table tr th {
 	overflow: hidden;
 	white-space: nowrap;
 	border-right: 1px solid #ccc;
+	border-left: 1px solid #fff;
 }
 
 table tr td {
-	border-left: 1px solid #fff;
+	height: 22px;
 }
 
 table tr:hover {

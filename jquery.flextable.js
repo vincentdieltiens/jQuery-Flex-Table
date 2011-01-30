@@ -52,11 +52,11 @@
 				flexTable.set_header_resizeable();
 			}
 			
-			/*if( options.ellipsisClass != null ) {
+			if( options.ellipsisClass != null ) {
 				flexTable.ellipsis_cell_content();
 			}
 			
-			$(window).resize(function(){
+			/*$(window).resize(function(){
 				flexTable.update_column_widths();
 			})*/
         });
@@ -175,33 +175,34 @@
 				
 				col_index += 1;
 			});
-			
+			alert('lol');
 			// For each table cell of each line of the table body
 			// we must update the width of the sub div (for ellipsis)
 			this.$table.find('tbody').find('tr').each(function(){
-				
-				/*col_index = 0;
+				alert('mdr');
+				col_index = 0;
 				$(this).find('td').each(function(){
 					
-					var column_width = self.column_widths[col_index];
+					//var column_width = self.column_widths[col_index];
 					var $td = $(this);
 
-					if( column_width.type == 'percentage' ) {
+					/*if( column_width.type == 'percentage' ) {
 						$td.css('width', relative_width * column_width.val/100 );
 						//w += (relative_width * column_width.val/100)+'px ';
 					} else {
 						$td.css('width', column_width.val );
 						//w += column_width.val+'px ';
-					}
+					}*/
 					
 					if( self.options.ellipsisClass != null ) {
 						if( $td.hasClass(self.options.ellipsisClass) ) {
-							$td.find('div').css('width', $td.width()+'px');
+							alert('lol');
+							$td.find('div').width($td.width());
 						}
 					}
 					
 					col_index += 1;
-				});*/
+				});
 				
 			});
 			
@@ -295,13 +296,15 @@
 					return;
 				}
 				
-				var sash_pos = $th.position().left + $th.width();
+				
+				var sash_pos = $th.position().left + 
+					$th.width();
 				
 				var $sash = $('<div />').addClass('ghost').css({
 					'position': 'absolute',
 					'height': self.$table.height(),
-					'left': sash_pos+'px',
-					'cursor': 'col-resize'
+					'left': (sash_pos+2)+'px',
+					'cursor': 'col-resize',
 				})
 				
 				$sashes.append($sash);
@@ -400,20 +403,53 @@
 			// Width of the th
 			var th_width = $th.width();
 			
-			//this.$table.width( this.$table.width() + e.clientX - this.drag_x );
+			//
 			
 			// Gets the distance of the drag
 			var drag_distance = e.clientX - this.drag_x;
 			
-			// Tries to set the new width
-			$th.width(th_width + drag_distance);
+			// Do nothing if there is no drag
+			if( drag_distance == 0 ) {
+				return;
+			}
 			
-			// Gets the difference between the width wanted by the user and the real one
-			var diff = $th.width() - th_width;
+			if( self.options.changeTableWidthOnColResize == true ) {
+				// set the new size of the table
+				self.$table.width( self.$table.width() + e.clientX - this.drag_x );
+				
+				// set the new Width
+				$th.width(th_width + drag_distance);
+				
+				$next_th = $th.next();
+				
+				var new_sash_pos = $next_th.position().left - 2;
+				$sash.css({'left': new_sash_pos+'px'});
+				
+			} else {
+				// Tries to set the new width
+				$th.width(th_width + drag_distance);
+				
+				// Gets the difference between the width wanted by the user and the real one
+				var diff = $th.width() - th_width;
+
+				// Get the next column and resize it !
+				$next_th = $th.next();
+				$next_th.width( $next_th.width() - diff );
+				
+				var new_sash_pos = $next_th.position().left - 2;
+				$sash.css({'left': new_sash_pos+'px'});
+			}
 			
-			// Get the next column and resize it !
-			$next_th = $th.next();
-			$next_th.width( $next_th.width() - diff );
+			
+			
+			/*if( self.options.ellipsisClass != null ) {
+				if( $td.hasClass(self.options.ellipsisClass) ) {
+					alert('lol');
+					$td.find('div').width($td.width());
+				}
+			}*/
+			
+			
 			
 			// If there is a difference
 			/*if( diff != 0 ) {
@@ -445,13 +481,15 @@
 		ellipsisClass: 'truncate',
 		resizeableClass: 'resizeable',
 		columnWidths: null,
-		ghostClass: null
+		ghostClass: null,
+		changeTableWidthOnColResize: false
 	};
 	
 	$.fn.flextable.lazyDefaults = {
 		ellipsisClass: null,
 		resizeableClass: null,
 		columnWidths: null,
-		ghostClass: null
+		ghostClass: null,
+		changeTableWidthOnColResize: false
 	}
 })(jQuery);
