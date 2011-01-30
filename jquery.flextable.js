@@ -174,38 +174,7 @@
 				}
 				
 				col_index += 1;
-			});
-			alert('lol');
-			// For each table cell of each line of the table body
-			// we must update the width of the sub div (for ellipsis)
-			this.$table.find('tbody').find('tr').each(function(){
-				alert('mdr');
-				col_index = 0;
-				$(this).find('td').each(function(){
-					
-					//var column_width = self.column_widths[col_index];
-					var $td = $(this);
-
-					/*if( column_width.type == 'percentage' ) {
-						$td.css('width', relative_width * column_width.val/100 );
-						//w += (relative_width * column_width.val/100)+'px ';
-					} else {
-						$td.css('width', column_width.val );
-						//w += column_width.val+'px ';
-					}*/
-					
-					if( self.options.ellipsisClass != null ) {
-						if( $td.hasClass(self.options.ellipsisClass) ) {
-							alert('lol');
-							$td.find('div').width($td.width());
-						}
-					}
-					
-					col_index += 1;
-				});
-				
-			});
-			
+			});	
 		},
 		
 		/**
@@ -255,6 +224,7 @@
 				// Create the wrapper <div>
 				// Important : we need to set explicitly the width of the wrapper div
 				// 	to make the text-overflow: ellipsis working !	
+				
 				var $wrapper_div = $('<div />').html(cell_content).width(cell_width)
 					.css({
 						'white-space': 'nowrap',
@@ -272,6 +242,12 @@
 
 				// put a title for the <td> cell
 				$td.attr('title', cell_content);
+				
+				//alert('bind resize');
+				$td.bind('resize', function(e, new_width){
+					$(this).find('div').width(new);
+					$(this).width(new_width);
+				});
 			});
 		},
 		
@@ -290,12 +266,12 @@
 			var th_index = 0;
 			this.$table.find('thead').find('th').each(function() {
 				var $th = $(this);
+				var th_index_copy = th_index;
 				
 				if( !$th.hasClass(self.options.resizeableClass) ) {
 					th_index += 1;
 					return;
 				}
-				
 				
 				var sash_pos = $th.position().left + 
 					$th.width();
@@ -311,21 +287,17 @@
 				
 				// and add some action on span
 				$sash.mousedown(function(e){
-					var th_index_copy = th_index;
 					self.ghost_drag_start($th, $(this), th_index_copy, e);
 				});
 
 				self.$table.mousemove(function(e){
 					if( self.dragging == true ) {
-						var th_index_copy = th_index;
 						self.ghost_drag_move($sash, th_index_copy, e);
 					}
 				});
 
 				$sash.mouseup(function(e){
 					if( self.dragging ) {
-						var th_index_copy = th_index;
-						
 						var $th_copy = $th;
 						self.ghost_drag_stop($th_copy, $sash, th_index_copy, e);
 					}
@@ -413,6 +385,7 @@
 				return;
 			}
 			
+			var diff = 0;
 			if( self.options.changeTableWidthOnColResize == true ) {
 				// set the new size of the table
 				self.$table.width( self.$table.width() + e.clientX - this.drag_x );
@@ -420,17 +393,22 @@
 				// set the new Width
 				$th.width(th_width + drag_distance);
 				
+				// Gets the difference between the width wanted by the user and the real one
+				diff = $th.width() - th_width;
+				
 				$next_th = $th.next();
 				
 				var new_sash_pos = $next_th.position().left - 2;
 				$sash.css({'left': new_sash_pos+'px'});
 				
+				
 			} else {
+				
 				// Tries to set the new width
 				$th.width(th_width + drag_distance);
 				
 				// Gets the difference between the width wanted by the user and the real one
-				var diff = $th.width() - th_width;
+				diff = $th.width() - th_width;
 
 				// Get the next column and resize it !
 				$next_th = $th.next();
@@ -440,7 +418,27 @@
 				$sash.css({'left': new_sash_pos+'px'});
 			}
 			
-			
+			if( drag_distance != 0 ) {
+				self.$table.find('tbody').find('tr').each(function(){
+					var $tr = $(this);
+					var index = 0;
+					$tr.find('td').each(function() {
+						//$td.width(50);
+						
+						if( index == th_index ) {
+							var $td = $(this);
+							
+							/*if( $td.hasClass(self.options.ellipsisClass) ) {
+								$td.find('div').width( 50 );
+								$td.width(50);
+							}*/
+							var new_width = $td.width() + drag_distance;
+							$td.trigger('resize', [new_width]);
+						}
+						index += 1;
+					});
+				});
+			}
 			
 			/*if( self.options.ellipsisClass != null ) {
 				if( $td.hasClass(self.options.ellipsisClass) ) {
