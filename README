@@ -10,4 +10,16 @@ This plugin makes HTML tables more flexible :
 	- Some columns can be resized (without changing the table width)
 	- The content of some cell can be truncated if it's too long for
 	  the cell width.
-	- 
+	
+Usage :
+
+$('selector').flextable({
+	ellipsisClass: 'truncate',
+	resizeableClass: 'resizeable',
+	columnWidths: [20, 65, '50%', '100px'],
+	ghostClass: 'ghost'
+});
+
+Examples :
+
+See the directory called tests
