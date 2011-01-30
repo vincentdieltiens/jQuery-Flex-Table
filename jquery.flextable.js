@@ -281,6 +281,8 @@
 		set_header_resizeable: function() {
 			var self = this;
 			
+			this.$table.wrap('<div />');
+			
 			var $sashes = $('<div />').addClass('sashes');
 			
 			// For each header cell, if it's resizeable add a <span> for the drag
