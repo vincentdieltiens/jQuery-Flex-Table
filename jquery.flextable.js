@@ -19,6 +19,11 @@
 	 * @param lazy : only load needed
 	 */
 	$.fn.flextable = function(opts, lazy) {
+		
+		if( $.textwidth == null ) {
+			throw new Error('textwidth plugin isn\'t loaded !');
+		}
+		
 		// Extends and merges default options with options given by the user
 		var options;
 		if( lazy == undefined ) {
@@ -82,9 +87,15 @@
 		
 		// informations
 		this.column_widths = [];
+		this.initial_column_widths = [];
 		this.width_for_all_fixed_columns = 0;
 		this.fixed_columns_count = 0;
 		this.ellipsis_columns = {};
+		
+		var self = this;
+		this.$table.find('thead').find('th').each(function(){
+			self.initial_column_widths.push( $(this).width() );
+		});
 
 		//this.init_colgroup();
 	}
@@ -216,6 +227,7 @@
 			var self = this;
 			
 			self.ellipsis_columns = {};
+			
 			var col_index = 0;
 			this.$table.find('thead').find('th').each(function(){
 				if( $(this).hasClass(self.options.ellipsisClass) ) {
@@ -404,18 +416,52 @@
 			var drag_distance = e.clientX - self.drag_x;
 			
 			if( self.options.resizeTableWidthOnColResize == true ) {
+				// If we allow table resizing when when resizing a column, just update the table width
+				// and column width
 				self.$table.width( self.$table.width() + drag_distance );
-			}
-			self.resize_column($th, col_index, drag_distance);
-			if( self.options.resizeTableWidthOnColResize == false ) {
+				self.resize_column($th, col_index, drag_distance);
+			} else {
+				
+				// If table resizing is not allowed, when must reduce/raise the width of the next column
+				// to keep the same total width
+				if( drag_distance > 0 && !((col_index+1) in self.ellipsis_columns) ) {
+					// if it is a drag to the right, and if there is no ellipsis for the next column,
+					// calculate the max drag_distance allowed !
+					var col_min_size = self.column_min_size(col_index+1);
+					drag_distance = Math.min(drag_distance, $th.next().width() - col_min_size);
+				} else if( drag_distance < 0 && !(col_index in self.ellipsis_columns) ) {
+					var col_min_size = self.column_min_size(col_index);
+					drag_distance = Math.min(drag_distance, $th.width() + col_min_size);
+				}
+				
+				self.resize_column($th, col_index, drag_distance);
 				self.resize_column($th.next(), col_index+1, -drag_distance);
 			}
-			
 			
 			var sash_new_pos = $th.next().position().left - 2;
 			$sash.css('left', sash_new_pos+'px');
 		},
-		
+		column_min_size: function(col_index) {
+			var longer_width = 0;
+			
+			this.$table.find('tbody').find('tr').each(function(){
+				var $tr = $(this);
+				
+				var td_index = 0;
+				$tr.find('td').each(function(){
+					
+					if( td_index == col_index )
+						
+						longer_width = Math.max(longer_width, $.textwidth($(this).html(), {
+							'font-size': $(this).css('font-size'),
+							'font-family': $(this).css('font-family')
+						}));
+						
+					td_index += 1;
+				});
+			});
+			return longer_width;
+		}, 
 		resize_column: function($cell, col_index, size) {
 			var self = this;
 			
