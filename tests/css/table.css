@@ -14,11 +14,11 @@ table span.ui-resize {
 	cursor			: col-resize;
 	display			: inline;
 	float			: right;
-	height			: 20px;
+	height			: 22px;
 	margin			: -3px -5px -5px 0;
 	width			: 8px;
 	z-index			: 10000;
-	background-image: url(images/drag.png);
+	background-image: url(../images/drag.png);
 }
 
 table tr td, table tr th {
@@ -27,7 +27,6 @@ table tr td, table tr th {
 }
 
 .ghost {
-	background-color: #00ff00;
 	width: 2px;
-	background-image: url(images/separator.gif);
+	background-image: url(../images/separator.gif);
 }

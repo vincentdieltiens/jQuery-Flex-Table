@@ -305,7 +305,7 @@
 					'height': this.$table.height()+'px',
 				});
 			}
-			//this.$ghost.hide();
+			this.$ghost.hide();
 			
 			self.$table.before(this.$ghost);
 			
