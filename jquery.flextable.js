@@ -48,10 +48,10 @@
 			// Create a FlexTable object
 			var flexTable = new FlexTable($table, options);
 			
-			/*if( options.columnWidths != null ) {
+			if( options.columnWidths != null ) {
 				flexTable.init_column_widths();
 				flexTable.update_column_widths();
-			}*/
+			}
 			
 			if( options.resizeableClass != null ) {
 				flexTable.set_header_resizeable();
@@ -59,6 +59,9 @@
 			
 			if( options.ellipsisClass != null ) {
 				flexTable.ellipsis_cell_content();
+				$table.bind('resize', function(e, new_width){
+					flexTable.resize_table(new_width);
+				});
 			}
 			
 			/*$(window).resize(function(){
@@ -87,6 +90,7 @@
 		
 		// informations
 		this.column_widths = [];
+		this.column_count = 0;
 		this.initial_column_widths = [];
 		this.width_for_all_fixed_columns = 0;
 		this.fixed_columns_count = 0;
@@ -94,6 +98,7 @@
 		
 		var self = this;
 		this.$table.find('thead').find('th').each(function(){
+			self.column_count += 1;
 			self.initial_column_widths.push( $(this).width() );
 		});
 
@@ -434,8 +439,8 @@
 					drag_distance = Math.min(drag_distance, $th.width() + col_min_size);
 				}
 				
-				self.resize_column($th, col_index, drag_distance);
-				self.resize_column($th.next(), col_index+1, -drag_distance);
+				self.resize_column($th, col_index, $th.width() + drag_distance);
+				self.resize_column($th.next(), col_index+1, $td.next().width()-drag_distance);
 			}
 			
 			var sash_new_pos = $th.next().position().left - 2;
@@ -468,7 +473,39 @@
 			if( col_index in self.ellipsis_columns ) {
 				// The current column is an ellipsis column
 				// We must resize the subdivs of the column before resizing it
+				//alert('update ellipsis col : '+col_index);
+				self.$table.find('tbody').find('tr').each(function(){
+					var $tr = $(this);
+					
+					var td_index = 0;
+					$tr.find('td').each(function() {
+						var $td = $(this);
+						
+						if( td_index == col_index ) {
+							var $div = $td.find('div');
+							$div.width(size);
+							//alert('updated');
+						}
+
+						td_index += 1;
+					});
+				})
 				
+			} else {
+				// The current column is not an allipsis column
+				// update the size of the column
+				//alert('update normal col : '+col_index);
+				$cell.width( size );
+				
+			}
+		},
+		adapt_column: function($cell, col_index, size) {
+			var self = this;
+			
+			if( col_index in self.ellipsis_columns ) {
+				// The current column is an ellipsis column
+				// We must resize the subdivs of the column before resizing it
+				alert('update ellipsis col : '+col_index);
 				self.$table.find('tbody').find('tr').each(function(){
 					var $tr = $(this);
 					
@@ -489,10 +526,42 @@
 			} else {
 				// The current column is not an allipsis column
 				// update the size of the column
-				
+				alert('update normal col : '+col_index);
 				$cell.width( $cell.width() + size );
 				
 			}
+		},
+		resize_table: function(new_size) {
+			var self = this;
+			
+			this.$table.find('thead').find('tr').each(function(){
+				var $tr = $(this);
+
+				var col_index = 0;
+				$tr.find('th').each(function(){
+					var $td = $(this);
+					var width = 0;
+					
+					var column_width = self.column_widths[col_index];
+					if( column_width != undefined ) {
+						if( column_width.type == 'flexible' ) {
+							width = (new_size - self.width_for_all_fixed_columns) * column_width.width / 100.0;
+						} else {
+							width = column_width.width;
+						}
+					} else {
+						width = new_size / self.column_count;
+					}
+					
+					
+					
+					self.resize_column($td, col_index, width);
+					
+					col_index += 1;
+				});
+			});
+			
+			//this.$table.width(640);
 		} 
 	};
 	
