@@ -11,6 +11,18 @@
  */
 (function($){
 	
+	$.fn.property = function(property) {
+		//alert(property+' : '+parseInt($(this).css(property)));
+		if( $(this).css(property) != '' ) {
+			if( property == 'border-spacing' ) {
+				var vals = $(this).css(property).split(' ');
+				return parseInt(vals[0]) + parseInt(vals[1]);
+			}
+			return parseInt($(this).css(property));
+		}
+		return 0;
+	}
+	
 	/**
 	 * Create a flex table for each element
 	 *
@@ -63,10 +75,6 @@
 					flexTable.resize_table(new_width);
 				});
 			}
-			
-			/*$(window).resize(function(){
-				flexTable.update_column_widths();
-			})*/
         });
 	}
 	
@@ -95,11 +103,25 @@
 		this.width_for_all_fixed_columns = 0;
 		this.fixed_columns_count = 0;
 		this.ellipsis_columns = {};
+		this.table_extra = this.$table.property('padding-right') +
+			this.$table.property('padding-left') +
+			this.$table.property('margin-right') +
+			this.$table.property('margin-left') +
+			this.$table.property('border-right') +
+			this.$table.property('border-left') + 
+			this.$table.property('border-spacing');
 		
 		var self = this;
 		this.$table.find('thead').find('th').each(function(){
 			self.column_count += 1;
 			self.initial_column_widths.push( $(this).width() );
+			//alert($(this).property('border-left'));
+			self.table_extra += $(this).property('border-left') +
+				$(this).property('border-right') +
+				$(this).property('margin-left') +
+				$(this).property('margin-right') +
+				$(this).property('padding-left') +
+				$(this).property('padding-right');
 		});
 
 		//this.init_colgroup();
@@ -286,7 +308,6 @@
 					
 					//alert('bind resize');
 					$td.bind('resize', function(e, new_width){
-						
 						$(this).find('div').width(new_width-2);
 						$(this).width(new_width-2);
 					});
@@ -496,7 +517,7 @@
 				// update the size of the column
 				//alert('update normal col : '+col_index);
 				$cell.width( size );
-				
+				$cell.css('min-width', size+'px');
 			}
 		},
 		adapt_column: function($cell, col_index, size) {
@@ -505,7 +526,6 @@
 			if( col_index in self.ellipsis_columns ) {
 				// The current column is an ellipsis column
 				// We must resize the subdivs of the column before resizing it
-				alert('update ellipsis col : '+col_index);
 				self.$table.find('tbody').find('tr').each(function(){
 					var $tr = $(this);
 					
@@ -526,7 +546,6 @@
 			} else {
 				// The current column is not an allipsis column
 				// update the size of the column
-				alert('update normal col : '+col_index);
 				$cell.width( $cell.width() + size );
 				
 			}
@@ -536,34 +555,40 @@
 			
 			this.$table.find('thead').find('tr').each(function(){
 				var $tr = $(this);
-
+				//alert(self.table_extra);
 				var col_index = 0;
 				$tr.find('th').each(function(){
-					var $td = $(this);
+					var $th = $(this);
 					var width = 0;
 					
 					var column_width = self.column_widths[col_index];
+					
 					if( column_width != undefined ) {
 						if( column_width.type == 'flexible' ) {
-							width = (new_size - self.width_for_all_fixed_columns) * column_width.width / 100.0;
+							width = ((new_size - self.width_for_all_fixed_columns - self.table_extra) * (column_width.width / 100.0));
+							//alert('set flexible with : '+width);
 						} else {
 							width = column_width.width;
+							//alert('set fixed with : '+width);
 						}
 					} else {
-						width = new_size / self.column_count;
+						width = ((new_size - self.table_extra) / self.column_count);
+						//alert('set global with : '+width);
 					}
-					
-					
-					
-					self.resize_column($td, col_index, width);
+
+					width = Math.floor(width);
+
+					self.resize_column($th, col_index, width);
 					
 					col_index += 1;
 				});
 			});
 			
-			//this.$table.width(640);
+			//this.$table.width(new_size - self.table_extra);
 		} 
 	};
+	
+	
 	
 	// Default options for this plugin
 	$.fn.flextable.defaults = {
