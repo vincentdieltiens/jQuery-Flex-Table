@@ -12,12 +12,11 @@
 (function($){
 	
 	$.fn.property = function(property) {
-		//alert(property+' : '+parseInt($(this).css(property)));
-		if( $(this).css(property) != '' ) {
-			if( property == 'border-spacing' ) {
-				var vals = $(this).css(property).split(' ');
-				return parseInt(vals[0]) + parseInt(vals[1]);
-			}
+		
+		if( $(this) != undefined && 
+			$(this).css(property) != '' && 
+			$(this).css(property) != undefined 
+		) {
 			return parseInt($(this).css(property));
 		}
 		return 0;
@@ -45,6 +44,8 @@
 		}
        	
         var obj = this;
+
+        
 		
 		// Apply on each object
         return obj.each(function(){
@@ -103,25 +104,28 @@
 		this.width_for_all_fixed_columns = 0;
 		this.fixed_columns_count = 0;
 		this.ellipsis_columns = {};
-		this.table_extra = this.$table.property('padding-right') +
+
+		this.table_extra = 0 +
+			this.$table.property('padding-right') +
 			this.$table.property('padding-left') +
 			this.$table.property('margin-right') +
 			this.$table.property('margin-left') +
 			this.$table.property('border-right') +
-			this.$table.property('border-left') + 
-			this.$table.property('border-spacing');
+			this.$table.property('border-left');
+			//this.$table.property('border-spacing');
 		
 		var self = this;
 		this.$table.find('thead').find('th').each(function(){
 			self.column_count += 1;
 			self.initial_column_widths.push( $(this).width() );
 			//alert($(this).property('border-left'));
-			self.table_extra += $(this).property('border-left') +
+			self.table_extra += 0 +
+				$(this).property('border-left') +
 				$(this).property('border-right') +
 				$(this).property('margin-left') +
 				$(this).property('margin-right') +
-				$(this).property('padding-left') +
-				$(this).property('padding-right');
+				$(this).property('padding-left');
+				//$(this).property('padding-right');
 		});
 
 		//this.init_colgroup();
